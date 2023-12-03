@@ -10,17 +10,27 @@ use App\Models\User;
 use App\Models\Post;
 use App\Models\Item;
 
-
-
 use Illuminate\Http\Request;
 
 // メールクラスのUse宣言
+// 旧書式テストバージョン
 use App\Mail\SendTestMail;
+// 申請者が自分の申請を承認（申請）した時のメール
+use App\Mail\ApplicantApprovalMail;
+// 承認者が申請者の申請を承認した時のメール
+use App\Mail\AuthorizerApprovalMail;
+// 承認者が申請者の申請を差戻した時のメール
+use App\Mail\AuthorizerDisapprovalMail;
+// 注文者が確認者の承認を承認した時のメール
+use App\Mail\OrdererCompletedMail;
+// 注文者が確認者の承認を差戻した時のメール
+use App\Mail\OrdererDisapprovedMail;
+// 申請者が再申請した際のメール
+use App\Mail\ReApplicationMail;
+use App\Mail\WithdrawAnApplicationMail;
 // 認証しているユーザーにデータを渡すためのuse宣言
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Facades\Mail;
-
 use Illuminate\Support\Facades\DB;
 
 
@@ -59,6 +69,9 @@ public function create_applicant(Request $request)
     return view('posts.create_applicant',compact('consumables','accounts'));
 }
 
+
+
+
 // テーブルデータを取得してビューに渡す
 public function data_destination(Request $request)
 {
@@ -96,24 +109,22 @@ public function search_destination(Request $request)
 
         // Userモデルを使用してデータベースから検索
         $names = User::where('name', 'like', "%{$search}%")->get();
+        foreach($names as $name){
+            $name['department'] = $name->department()->get();
+        }
         
         // レスポンスとしてJSONデータを返す
         return response()->json([
-            'names' => $names,  
+            'names' => $names,
+
             ]);
 }
 
 
 
-// 上長承認画面上の表示
-// public function authorizer()
-// {
-//     return view('posts.applicant_t',compact('departments','consumables','accounts','emails'));
-  
-// }
-
 // storeメソッドを用いてモデルにパラメータを渡す
-   public function store(Request $request){
+   public function store_applicant(Request $request){
+    // dd($request);
     $post = new Post();
     $post->application_status = $request->input('application_status');//申請ステータスは常に１とする。意味は、上長or購買担当者確認中
     $post->application_day = $request->input('application_day');
@@ -123,10 +134,14 @@ public function search_destination(Request $request)
     $post->purchasing_url = $request->input('purchasing_url');
     $post->purpose_of_use = $request->input('purpose_of_use');
     $post->delivery_hope_day = $request->input('delivery_hope_day');
+
     //カンマを消す 
     $post->subtotal = str_replace(',', '', $request->input('subtotal'));
     $post->tax_amount = str_replace(',', '', $request->input('tax_amount'));
     $post->total_amount = str_replace(',', '', $request->input('total_amount'));
+   
+    // メールアドレス欄の追加
+    $post->destination = $request->input('destination');
     $post->remarks = $request->input('remarks');
     $post->delivery_day = $request->input('delivery_day');
     $post->save();
@@ -146,11 +161,9 @@ public function search_destination(Request $request)
     $i++;
     };
 
-    
-    
     // return redirect()->route('posts.index')->with('flash_message', '申請されました。');
-    $user = new User();
-    Mail::to($request->email)->send(new SendTestMail($post,$item));
+    // $user = new User();
+    Mail::to($request->destination)->send(new ApplicantApprovalMail($post,$item));
 
     return redirect()->route('posts.index')->with('messages','購入申請しました');
    }
@@ -165,194 +178,207 @@ public function index_history(Request $request){
     $search = $request->search;
     $query = Post::search($search);//クエリのローカルスコープ
     $posts = $query->select
-    ('id','application_status','application_day','department_id','user_id','purchase','delivery_hope_day','total_amount','total_amount')->paginate(10);// idと購入先を検索画面をページネーションで表示されるページを調整
-    
-    $items = Item::all();
-    
-   
-    // $posts = Post::paginate(5); これがあるとエラーが起こるのはなぜ？
-    // dd($items);
-    return view('posts.index_history',compact('posts','items'));
+    ('id','application_status','application_day','department_id','user_id','purchase','delivery_hope_day','total_amount','destination','delivery_day')->paginate(10);// idと購入先を検索画面をページネーションで表示されるページを調整
+
+    // $items = Item::select('product_name')->get();
+    return view('posts.index_history',compact('posts'));
 }
+
 
 
 //申請時の詳細画面
 public function show_applicant($id){
     $posts = Post::find($id);
-    return view('posts.show_applicant', compact('posts'));
+    $items = $posts->items;
+    // dd($items);
+    return view('posts.show_applicant', compact('posts', 'items'));
+    // dd($items);
 }
 
 
 
-
-
-
-// 削除機能（取下機能）
-public function destroy($id)
-{
-    $posts = Post::find($id);
-    $posts -> delete();
-    return to_route('posts.index');
-}
-
-
-// 複写機能の実装のため詳細画面を編集できるような処理を実行
-public function edit_applicant($id){
-    $departments = Department::all();
+// 詳細画面を編集できるような処理を実行
+public function edit_reapplication($id){
     $consumables = Consumable::all();
     $accounts = Account::all();
-    $emails = User::all();
     $posts =Post::find($id);
-    return view('posts.edit_applicant',compact('posts','departments','consumables','accounts','emails'));
+    $items = $posts->items;
+    return view('posts.edit_reapplication',compact('posts','items','consumables','accounts'));
 }
 
-// 確認者（上長）の時点においてeditアクションを用いてビューに指定の変数を渡す処理
-public function create($id)
+// 複写機能
+public function create_copy_applicant(Request $request, $id)
 {
     $posts = Post::find($id);
-    $departments = Department::all();
+    $items = $posts->items;
     $consumables = Consumable::all();
     $accounts = Account::all();
-    $emails = User::all();
-
-    return view('posts.edit',compact('posts','departments','consumables','accounts','emails'));
-
+    return view('posts.create_copy_applicant',compact('posts','items','consumables','accounts'));
 }
 
 
 
-
-
-
-
-// 承認確認画面をViewに渡しユーザーに表示させる
-public function update(Request $request, $id){
+// 申請者の再申請
+public function update_reapplication(Request $request, $id){
     
     $post =Post::find($id);
-    $post->application_status = 2;//申請ステータスは常に2とする。意味は購買担当者確認中
-    $post->application_day = $request->input('application_day');
-    $post->employee_name = $request->input('employee_name');
-    $post->department_name = $request->input('department_name');
-    $post->purchase = $request->input('purchase');
-    $post->delivery_day = $request->input('delivery_day');
-    $post->consumable_equipment = $request->input('consumable_equipment');
-    $post->product_name = $request->input('product_name');
-    $post->unit_purchase_price = $request->input('unit_purchase_price');
-    $post->purchase_quantity = $request->input('purchase_quantity');
-    $post->subtotal = $request->input('subtotal');
-    $post->tax_amount = $request->input('tax_amount');
-    $post->total_amount = $request->input('total_amount');
-    $post->unit = $request->input('unit');
-    $post->account = $request->input('account');
-    $post->mail_address = $request->input('mail_address');//valueが数値になる
-    $post ->save();
-    return to_route('posts.index_history');
-}
+    // dd($request);
+    $post->application_status = $request->application_status;
+    $post->application_day = $request->application_day;
+    $post->user_id = $request->user_id;
+    $post->department_id = $request->department_id;
+    $post->purchase = $request->purchase;
+    $post->purchasing_url = $request->purchasing_url;
+    $post->purpose_of_use = $request->purpose_of_use;
+    $post->delivery_hope_day = $request->delivery_hope_day;
 
-
-
-// プロフィール画面
-public function profile(){
-    $profiles = Auth::user();
-    return view('posts.profile',compact('profiles'));
-}
-// パスワード変更画面（プロフィール画面から遷移させる設定をビューで行う）
-public function edit_password(){
-    return view('posts.edit_password');
-    
-}
-
-
-
-
-// パスワードアップデート
-// public function update_password(Request $request)
-//      {
-//          $validatedData = $request->validate([
-//              'password' => 'required|confirmed',
-//          ]);
- 
-//          $user = Auth::user();
- 
-//          if ($request->input('password') == $request->input('password_confirmation')) {
-//              $user->password = bcrypt($request->input('password'));
-//              $user->update();
-//          } else {
-//              return to_route('posts.edit_password');
-//          }
- 
-//          return to_route('posts');
-//      }
-
-// mailの設定
-public function send()
-{
-    $posts =Post::all();
-    $user =User::all();
-    $mailable = new SendTestMail($posts,$user);
-    // dd($mailable);
-    Mail::send($mailable);
-    return redirect()->route('posts');
-    
-}
-
-
-
-// （予備）申請入力画面（CRUDでいうcreate)をViewに渡しユーザーに表示させる
-public function applicant_t()
-{
-   $departments = Department::all();
-   $consumables = Consumable::all();
-   $accounts = Account::all();
-   $emails = User::all();
-
-
-   return view('posts.applicant_t',compact('departments','consumables','accounts','emails'));
+    //カンマを消す 
+    $post->subtotal = str_replace(',', '', $request->subtotal);
+    $post->tax_amount = str_replace(',', '', $request->tax_amount);
+    $post->total_amount = str_replace(',', '', $request->total_amount);
    
+    // メールアドレス欄の追加
+    $post->destination = $request->destination;
+    // 確認者or注文担当者が記載していく項目
+    $post->remarks = $request->remarks;
+    $post->save();
+    
+    
+    // 複数レコードが渡って来ないのでどうすればいいか?
+    $i = 0;
+    foreach ($request->consumables_equipment_id as $id) {
+    $item =Item::find($id);
+    // dd($item);
+    $item->post_id = $post->id;
+    $item->consumables_equipment_id = $request->consumables_equipment_id[$i];
+    $item->product_name = $request->product_name[$i];
+    $item->unit_purchase_price = $request->unit_purchase_price[$i];
+    $item->purchase_quantities= $request->purchase_quantities[$i];
+    $item->units = $request->units[$i];
+    $item->account_id = $request->account_id[$i];
+    $item->save();
+    $i++;
+    };
 
+    
+    
+    // return redirect()->route('posts.index')->with('flash_message', '申請されました。');
+    // $user = new User();
+    Mail::to($request->destination)->send(new ReApplicationMail($post,$item));
+
+    return redirect()->route('posts.index')->with('messages','購入申請しました');
+   }
+
+// ここが分からない
+   // 削除機能（取下機能）
+    public function destroy_reapplication($post_id)
+    {
+      $post = Post::find($post_id);
+    //   dd($post );
+      $post -> delete();
+      $items = Item::where('post_id',$post_id)->get();
+      foreach($items as $item)
+      {
+      $item -> delete();
+      };
+    // 注文者にもメールを送りたい  
+      Mail::to($post->destination)->send(new WithdrawAnApplicationMail($post,$item[0]));
+      Mail::to('order@test.test')->send(new WithdrawAnApplicationMail($post,$item[0]));
+      return to_route('posts.index');
+    }
+
+
+
+
+// 上長承認画面（CRUDでいうcreate)をViewに渡しユーザーに表示させる
+public function create_authorizer(Request $request,$id)
+{
+    $consumables = Consumable::all();
+    $accounts = Account::all();
+    $posts = Post::find($id);
+    $items = $posts->items;
+    return view('posts.create_authorizer',compact('posts','items','consumables','accounts'));
 }
 
 
-
-// public function choiceEmail($id) {
-//     // データベースからメールアドレスを取得する
-//     $email = DB::table("users")
-//     ->where("id", $id)
-//     ->value("email");
-
-//     // メールアドレスを返す
-//     return response()->json([
-//       "email" => $email,
-//     ]);
-//   }
-
-
-// public function search(Request $request, User $user)
-// {
-  
-//     $consumables = Consumable::all();
-//     $accounts = Account::all();
-
-//     // 1対多 親->子
-//     // $posts = Consumable::find(1)->posts();
-//     // 検索機能の実装
-//     $search = $request->search;
-//     $query = User::search($search);//クエリのローカルスコープ
-//     $users = $query->select('id','name','department_id','email')->paginate(2);// idと購入先を検索画面をページネーションで表示されるページを調整
-//     return view('search',compact('consumables','accounts','users'));
-// }
+// 上長の承認
+public function update_authorizer(Request $request, $id){
+    
+    $post =Post::find($id);
+    // dd($post);
+    
+    // 確認者or注文担当者が記載していく項目
+    $post->application_status = $request->application_status;
+    $post->remarks = $request->remarks;
+    $post->save();
+    
+    // 注文者
+    Mail::to('order@test.test')->send(new AuthorizerApprovalMail($post,$id));
+    // 別に送りたい人
+    if($request->email){
+    Mail::to($request->email)->send(new AuthorizerApprovalMail($post,$id));
+    }
+    return redirect()->route('posts.index')->with('messages','購入申請しました');
+   }
 
 
-// 申請時の詳細画面
-// public function show_applicant($id){
-//     $departments = Department::all();
-//     $consumables = Consumable::all();
-//     $accounts = Account::all();
-//     $emails = User::all();
-//     $posts =Post::find($id);
-//     return view('posts.show_applicant',compact('posts','departments','consumables','accounts','emails'));
-// }
+// 上長の差戻
+public function remand_authorizer(Request $request, $id){
+    
+    $post =Post::find($id);
+    $post->application_status = 4;//申請ステータスは常に4とし、意味は差戻という意味。
+    $post->reason_for_remand = $request->reason_for_remand;
+    // dd($post);
+    $post->save();
+    
 
+    Mail::to($post->user->email)->send(new AuthorizerDisapprovalMail($post,$id));
+    
+
+    return redirect()->route('posts.index')->with('messages','申請を差戻しました');
+   }
+
+
+
+
+// 確認者承認画面の表示
+public function create_order(Request $request,$id)
+{
+    $posts = Post::find($id);
+    $items = $posts->items;
+    $consumables = Consumable::all();
+    $accounts = Account::all();
+    return view('posts.create_order',compact('posts','items','consumables','accounts'));
+}
+
+
+// 注文担当者の承認
+public function complete_order(Request $request, $id){
+    
+    $post =Post::find($id);
+    // dd($request);
+    $post->application_status = $request->application_status;
+    $post->remarks = $request->remarks;
+    $post->delivery_day = $request->delivery_day;
+    $post->save();
+    Mail::to($post->user->email)->send(new OrdererCompletedMail($post,$id));
+    return redirect()->route('posts.index')->with('messages','注文完了しました');
+   }
+
+
+// 注文者担当者の差戻
+public function remand_order(Request $request, $id){
+    
+    $post =Post::find($id);
+    // dd($request);
+    $post->application_status = 4;//申請ステータスは常に4とし、意味は差戻という意味。
+    $post->remarks = $request->input('remarks');
+    $post->delivery_day = $request->input('delivery_day');
+    $post->save();
+    Mail::to($post->user->email)->send(new OrdererDisapprovedMail($post,$id));
+
+    return redirect()->route('posts.index')->with('messages','申請を差戻しました');
+   }
 
 
 }
