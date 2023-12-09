@@ -100,26 +100,26 @@
   @foreach($items as $item)
    <tr class="item">
      <td>
-         <select class="form-control" name="consumables_equipment_id[0]" value="{{old('consumables_equipment_id',$item->consumables_equipment_id)}}">
+         <select class="form-control" name="consumables_equipment_id[{{$loop->index}}]" value="{{old('consumables_equipment_id',$item->consumables_equipment_id)}}">
          @foreach ($consumables as $consumable)
          <option value="{{$consumable->id}}">{{$consumable->consumables_equipment}}</option>    
          @endforeach
          </select>
      </td>
      <td>
-         <input type="text" class="form-control"  name="product_name[0]" value="{{old('product_name',$item->product_name)}}">
+         <input type="text" class="form-control"  name="product_name[{{$loop->index}}]" value="{{old('product_name',$item->product_name)}}">
      </td>
      <td>
-     <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[0]" pattern="^[0-9]+$" value="{{old('unit_purchase_price',$item->unit_purchase_price)}}">
+     <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[{{$loop->index}}]" pattern="^[0-9]+$" value="{{old('unit_purchase_price',$item->unit_purchase_price)}}">
      </td>
      <td>
-     <input type="text" class="form-control text-right" size="3" name="purchase_quantities[0]" pattern="^[0-9]+$" value="{{old('purchase_quantities',$item->purchase_quantities)}}">
+     <input type="text" class="form-control text-right" size="3" name="purchase_quantities[{{$loop->index}}]" pattern="^[0-9]+$" value="{{old('purchase_quantities',$item->purchase_quantities)}}">
      </td>
      <td>
-       <input type="text" class="form-control text-right" size="3" name="units[0]" value="{{old('units',$item->units)}}">
+       <input type="text" class="form-control text-right" size="3" name="units[{{$loop->index}}]" value="{{old('units',$item->units)}}">
      </td>
      <td>
-         <select class="form-control" name="account_id[0]" value="{{old('accound_id',$item->account_id)}}">
+         <select class="form-control" name="account_id[{{$loop->index}}]" value="{{old('accound_id',$item->account_id)}}">
          @foreach ($accounts as $account)
            <option value="{{$account->id}}">{{$account->account}}</option>
          @endforeach
@@ -138,19 +138,18 @@
 
 {{-- 金額合計関係（自動計算）算術演算子の設定 --}}
 <div class="form-group col-1 my-4" id="total">
-   <label class="label">小計</label>
-   <input class="form-control text-right" type="text"  name="subtotal" value="{{old('subtotal',$posts->subtotal)}}" readonly>
-</div>
-
-
-<div class="form-group col-1 my-4">
-   <label class="label">消費税</label>
-   <input class="form-control text-right" type="text"  name="tax_amount" value="{{old('tax_amount',$posts->tax_amount)}}" readonly>
+  <label class="label">小計</label>
+  <input class="form-control text-right" type="text"  name="subtotal" value="{{ number_format(old('subtotal', $posts->subtotal), 0, '.', ',') }}" readonly>
 </div>
 
 <div class="form-group col-1 my-4">
-   <label class="label font-weight-bold">発注金額合計</label>
-   <input class="form-control text-right" type="text"  name="total_amount" value="{{old('total_amount',$posts->total_amount)}}" readonly>
+  <label class="label">消費税</label>
+  <input class="form-control text-right" type="text"  name="tax_amount" value="{{ number_format(old('tax_amount', $posts->tax_amount), 0, '.', ',') }}" readonly>
+</div>
+
+<div class="form-group col-1 my-4">
+  <label class="label font-weight-bold">発注金額合計</label>
+  <input class="form-control text-right" type="text"  name="total_amount" value="{{ number_format(old('total_amount', $posts->total_amount), 0, '.', ',') }}" readonly>
 </div>
 {{-- 金額合計関係（ここまで） --}}
 
@@ -243,7 +242,7 @@
    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
  </div>
  <div class="modal-body">
- <p><strong>申請します。</strong>よろしいですか？</p>
+ <p><strong>再申請します。</strong>よろしいですか？</p>
  </div>
  <div class="modal-footer">
    <button type="submit" class="btn btn-success">再申請</button></a>
@@ -266,7 +265,7 @@
   <p><strong>再申請をキャンセルします。</strong>よろしいですか？</p>
  </div>
  <div class="modal-footer">
-   <a href="{{route('posts.index')}}"><button type="button" class="btn btn-danger">キャンセル</button></a>
+   <a href="{{route('posts.index')}}"><button type="button" class="btn btn-warning">キャンセル</button></a>
    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
  </div>
 </div>
@@ -300,6 +299,12 @@
 <script src="{{ asset('/js/applicant.js') }}"></script>
 <script type="module" src="{{ asset('/js/destination.js') }}"></script>
 </div>
+
+<div class="container mt-5">
+  <footer>        
+     <p>&copy; WEB申請アプリ All rights reserved.</p>
+  </footer>
+ </div>
 </body>
 </html>
 @endsection

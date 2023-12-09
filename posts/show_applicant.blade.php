@@ -18,10 +18,10 @@
 <h2>過去歴詳細</h2>
 {{-- $postを$postsにしたらエラーがなくなったのはなぜ？ --}}
 <div class="text-right">
-  <a href="{{route('post.create_copy_applicant',['id'=>$posts->id],['id'=>$posts->id])}}"><button class="btn btn-warning">複写新規</button></a>
+  <a href="{{route('post.create_copy_applicant',['id'=>$posts->id])}}"><button class="btn btn-warning">複写新規</button></a>
 </div>
 {{-- HTTPリクエストメソッドでデータを渡す記述とルーティング設定でname()を定義したのでroute()でデータベースに渡す記述 --}}
-{{-- ステータス上長承認の際に --}}
+{{-- ステータス上長承認へ--}}
 <input class="form-control" type="hidden" name="application_status" value="1">
              
         
@@ -126,21 +126,21 @@
         
         
              {{-- 金額合計関係（自動計算）算術演算子の設定 --}}
-            <div class="form-group col-1 my-4" id="total">
-                <label class="label">小計</label>
-                <input class="form-control text-right" type="text"  name="subtotal" value="{{$posts->subtotal}}" readonly>
-            </div>
-        
-            
-            <div class="form-group col-1 my-4">
-                <label class="label">消費税</label>
-                <input class="form-control text-right" type="text"  name="tax_amount" value="{{$posts->tax_amount}}" readonly>
-            </div>
-        
-            <div class="form-group col-1 my-4">
-                <label class="label font-weight-bold">発注金額合計</label>
-                <input class="form-control text-right" type="text"  name="total_amount" value="{{$posts->total_amount}}" readonly>
-            </div>
+             <div class="form-group col-1 my-4" id="total">
+              <label class="label">小計</label>
+              <input class="form-control text-right" type="text" name="subtotal" value="{{ number_format($posts->subtotal, 0, ',', ',') }}" readonly>
+           </div>
+           
+           <div class="form-group col-1 my-4">
+              <label class="label">消費税</label>
+              <input class="form-control text-right" type="text" name="tax_amount" value="{{ number_format($posts->tax_amount, 0, ',', ',') }}" readonly>
+           </div>
+           
+           <div class="form-group col-1 my-4">
+              <label class="label font-weight-bold">発注金額合計</label>
+              <input class="form-control text-right" type="text" name="total_amount" value="{{ number_format($posts->total_amount, 0, ',', ',') }}" readonly>
+           </div>
+           
              {{-- 金額合計関係（ここまで） --}}
              
         {{-- 送信先メールアドレスの選択検索機能を設けてアドレスのパラメータを変数に入れてMailableクラスに入れる --}}
@@ -174,6 +174,14 @@
           {{-- ボタン配置 --}}
           <a href="{{route('posts.index_history')}}"><button type="button" class="btn btn-outline-success btn-lg" style="width: 100px">戻る</button></a>
         </div>
+
+
+        <div class="container mt-5">
+          <footer>        
+             <p>&copy; WEB申請アプリ All rights reserved.</p>
+          </footer>
+        </div>
+
         </body>
         </html>
         @endsection

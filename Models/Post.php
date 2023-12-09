@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Item;
+
 
 class Post extends Model
 {
@@ -24,9 +26,12 @@ class Post extends Model
         'subtotal', 
         'tax_amount', 
         'total_amount', 
+        'destination',
         'remarks', 
         'delivery_day',
     ];
+
+    // protected $guarded = ['delivery_day'];
    
 
     public function scopeSearch($query,$search)
@@ -35,9 +40,14 @@ class Post extends Model
         $search_split = mb_convert_kana($search, 's');//全角スペースを半角
         $search_split2 = preg_split('/[\s]+/',$search_split);//空白で区切る
         foreach($search_split2 as $value) {
-        $query->where('purchase','like','%'.$value.'%'); }
+        $query->where('purchase','like','%'.$value.'%');
+      }
     }
     return $query;
+
+    
+
+
     }
 
     //子→親へのリレーション 
@@ -48,9 +58,10 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
-    // 子対親のリレーション
-    public function item(){
-        return $this->belongsTo(Item::class);
+    // 親（Post）と子(Item)のリレーション
+    public function items(){
+        // postsは複数のitemに関連つけられるので、メソッドはitemsとし、postsテーブルはitemsテーブルに対して主となるのでhasMany
+        return $this->hasMany(Item::class);
     }
 
     

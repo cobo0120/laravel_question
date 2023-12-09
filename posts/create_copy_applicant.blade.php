@@ -219,7 +219,7 @@
     {{-- ボタン配置 --}}
        
     <button type="button" class="btn btn-outline-success btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#exampleModal" >申請</button>
-    <button type="button" class="btn btn-outline-danger btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#example1Modal">キャンセル</button>
+    <button type="button" class="btn btn-outline-warning btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#example1Modal">キャンセル</button>
      
     {{-- ボタン配置（ここまで） --}}
 
@@ -257,16 +257,23 @@
        <p><strong>申請をキャンセルします。</strong>よろしいですか？</p>
       </div>
       <div class="modal-footer">
-        <a href="{{route('posts.index')}}"><button type="button" class="btn btn-danger">キャンセル</button></a>
+        <a href="{{route('posts.index')}}"><button type="button" class="btn btn-warning">キャンセル</button></a>
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
       </div>
     </div>
   </div>
 </div>
 
-  <script src="{{ asset('/js/applicant.js') }}"></script>
+  <script src="{{ asset('/js/reapplicant.js') }}"></script>
   <script type="module" src="{{ asset('/js/destination.js') }}"></script>
 </div>
+
+<div class="container mt-5">
+  <footer>        
+     <p>&copy; WEB申請アプリ All rights reserved.</p>
+  </footer>
+ </div>
+ 
 </body>
 </html>
 @endsection

@@ -27,7 +27,7 @@
         {{-- 自動表示 --}}
         <div class="form-group col-1 mb-2">
           <label class="label">申請No<br></label>
-          <input class="form-control" style="width: 130px" type="text" name="" value="自動採番">
+          <input class="form-control" style="width: 130px" type="text" name="" value="自動採番" readonly>
       </div>
 
         
@@ -35,7 +35,7 @@
         {{-- 自動表示取得 --}}
         <div class="form-group col-1 mb-2">
             <label class="label">申請日付<br></label>
-            <input class="form-control" style="width: 130px" type="text"  name="application_day" value="{{ date('Y-m-d') }}" style="width: 100px";>
+            <input class="form-control" style="width: 130px" type="text"  name="application_day" value="{{ date('Y-m-d') }}" style="width: 100px"; readonly>
         </div>
 
         {{-- データベースから取得し表示 --}}
@@ -44,7 +44,7 @@
             {{-- @php
                 var_dump(auth()->user()->department->department_name);
             @endphp --}}
-            <input class="form-control" style="width: 130px" type="text" name="" value="{{auth()->user()->department->department_name}}">
+            <input class="form-control" style="width: 130px" type="text" name="" value="{{auth()->user()->department->department_name}}" readonly>
             <input type="hidden" name="department_id" value="{{auth()->user()->department_id}}">
             {{-- <input type="hidden" name="department_id" value="2"> --}}
         </select>
@@ -53,27 +53,27 @@
         {{-- 自動表示取得 --}}
         <div class="form-group col-2 mb-2">
              <label class="label">申請者名<br></label>
-             <input class="form-control" style="width: 130px" type="text" name="" value="{{ auth()->user()->name }}">
+             <input class="form-control" style="width: 130px" type="text" name="" value="{{ auth()->user()->name }}" readonly>
              <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
         </div>
         <div class="form-group col-4 mb-2">
              <label class="label">購入先</label>
-             <input class="form-control" style="width: 250px" type="text" name="purchase" value="{{old('purchase')}}">
+             <input class="form-control" style="width: 250px" type="text" name="purchase" value="{{old('purchase')}}" required>
         </div>
         <div class="form-group col-6 mb-2">
              <label class="label">購入先URL</label>
-             <input class="form-control" type="text" name="purchasing_url" value="{{old('purchasing_url')}}">
+             <input class="form-control" type="text" name="purchasing_url" value="{{old('purchasing_url')}}" required>
         </div>
         {{-- テキスト入力 --}}
         <div class="form-group col-6 mb-2">
              <label class="label">利用目的</label>
-             <textarea class="form-control" name="purpose_of_use" value="{{old('purpose_of_use')}}"></textarea>
+             <textarea class="form-control" name="purpose_of_use" value="{{old('purpose_of_use')}}" required></textarea>
         </div>
 
         {{-- 自動表示 --}}
         <div class="form-group col-2 mb-2">
             <label class="label">納品希望日</label>
-            <input class="form-control" style="width: 130px" type="date" name="delivery_hope_day" style="width: 125px" value="{{old('delivery_hope_day')}}">
+            <input class="form-control" style="width: 130px" type="date" name="delivery_hope_day" style="width: 125px" value="{{old('delivery_hope_day')}}" required>
        </div>
 
 
@@ -104,16 +104,16 @@
               </select>
           </td>
           <td>
-              <input type="text" class="form-control"  name="product_name[0]" value="{{old('product_name')}}">
+              <input type="text" class="form-control"  name="product_name[0]" value="{{old('product_name')}}" required>
           </td>
           <td>
-          <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[0]" pattern="^[0-9]+$" value="{{old('unit_purchase_price')}}">
+          <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[0]" pattern="^[0-9]+$" value="{{old('unit_purchase_price')}}" required>
           </td>
           <td>
-          <input type="text" class="form-control text-right" size="3" name="purchase_quantities[0]" pattern="^[0-9]+$"required value="{{old('purchase_quantities')}}">
+          <input type="text" class="form-control text-right" size="3" name="purchase_quantities[0]" pattern="^[0-9]+$"required value="{{old('purchase_quantities')}}" required>
           </td>
           <td>
-            <input type="text" class="form-control text-right" size="3" name="units[0]">
+            <input type="text" class="form-control text-right" size="3" name="units[0]" required>
           </td>
           <td>
               <select class="form-control" name="account_id[0]" value="{{old('accound_id')}}">
@@ -203,7 +203,7 @@
 
   <div class="form-group col-4 my-4 h-50">
    <label for="email">送信先</label>
-   <input id="email" class="form-control choice-email" type="email" value="" name="destination" >
+   <input id="email" class="form-control choice-email" type="email" value="" name="destination" required>
  </div>
 
 
@@ -216,7 +216,7 @@
     {{-- ボタン配置 --}}
        
     <button type="button" class="btn btn-outline-success btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#exampleModal" >申請</button>
-    <button type="button" class="btn btn-outline-danger btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#example1Modal">キャンセル</button>
+    <button type="button" class="btn btn-outline-warning btn-lg" style="margin: 200px; width: 150px" data-bs-toggle="modal" data-bs-target="#example1Modal">キャンセル</button>
      
     {{-- ボタン配置（ここまで） --}}
 
@@ -264,6 +264,13 @@
   <script src="{{ asset('/js/applicant.js') }}"></script>
   <script type="module" src="{{ asset('/js/destination.js') }}"></script>
 </div>
+
+<div class="container mt-5">
+  <footer>        
+     <p>&copy; WEB申請アプリ All rights reserved.</p>
+  </footer>
+ </div>
+
 </body>
 </html>
 @endsection

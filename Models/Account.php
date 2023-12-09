@@ -9,4 +9,11 @@ class Account extends Model
 {
     use HasFactory;
     protected $table = "accounts";
+
+
+    public function item()
+    {
+        return $this->hasOne(Item::class);
+    }
+
 }

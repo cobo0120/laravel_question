@@ -64,7 +64,7 @@
                      @elseif ($post->application_status == 3)
                      <span style="color: blue;">発注済</span>
                      @else
-                     <span style="color: yellow;">差戻中</span>
+                     <span style="color: olive;">差戻中</span>
                      @endif
                         </td>
                         <td>{{$post->application_day}}</td>
@@ -90,7 +90,7 @@
                          @elseif ($post->application_status == 2)
                            <a href="{{route('post.create_order',['id'=>$post->id])}}" style="color: green;">注文者</a>
                          @elseif ($post->application_status == 4)
-                           <a href="{{route('post.create_order',['id'=>$post->id])}}" style="color: red;">確認者</a>
+                           <span style="color:olive">再申請待ち</span>
                          @else 
                          <span style="center">完了</span>
                          @endif

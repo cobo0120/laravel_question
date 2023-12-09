@@ -98,22 +98,22 @@
         @foreach($items as $item)
         <tr class="item" readonly>
           <td>
-              <input class="form-control" name="consumables_equipment_id[0]" value="{{old('consumables_equipment_id',$item->consumables_equipment_id)}}">
+              <input class="form-control" name="consumables_equipment_id[0]" value="{{old('consumables_equipment_id',$item->consumables_equipment_id)}}" readonly>
           </td>
           <td>
-              <input type="text" class="form-control"  name="product_name[0]" value="{{old('product_name',$item->product_name)}}">
+              <input type="text" class="form-control"  name="product_name[0]" value="{{old('product_name',$item->product_name)}}" readonly>
           </td>
           <td>
-          <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[0]" pattern="^[0-9]+$" value="{{old('unit_purchase_price',$item->unit_purchase_price)}}">
+          <input type="text" class="form-control text-right" size="5" name="unit_purchase_price[0]" pattern="^[0-9]+$" value="{{old('unit_purchase_price',$item->unit_purchase_price)}}" readonly>
           </td>
           <td>
-          <input type="text" class="form-control text-right" size="3" name="purchase_quantities[0]" pattern="^[0-9]+$"required value="{{old('purchase_quantities',$item->purchase_quantities)}}">
+          <input type="text" class="form-control text-right" size="3" name="purchase_quantities[0]" pattern="^[0-9]+$"required value="{{old('purchase_quantities',$item->purchase_quantities)}}" readonly>
           </td>
           <td>
-            <input type="text" class="form-control text-right" size="3" name="units[0]" value="{{old('units',$item->units)}}">
+            <input type="text" class="form-control text-right" size="3" name="units[0]" value="{{old('units',$item->units)}}" readonly>
           </td>
           <td>
-            <input class="form-control" name="account_id[0]" value="{{old('accound_id',$item->account_id)}}">
+            <input class="form-control" name="account_id[0]" value="{{old('accound_id',$item->account_id)}}" readonly>
           </td>
           <td class="clear-column close-icon">✖</td>
         </tr>
@@ -127,21 +127,20 @@
 
 
      {{-- 金額合計関係（自動計算）算術演算子の設定 --}}
-    <div class="form-group col-1 my-4" id="total">
-        <label class="label">小計</label>
-        <input class="form-control text-right" type="text"  name="subtotal" value="{{$posts->subtotal}}" readonly>
-    </div>
-
-    
-    <div class="form-group col-1 my-4">
-        <label class="label">消費税</label>
-        <input class="form-control text-right" type="text"  name="tax_amount" value="{{$posts->tax_amount}}" readonly>
-    </div>
-
-    <div class="form-group col-1 my-4">
-        <label class="label font-weight-bold">発注金額合計</label>
-        <input class="form-control text-right" type="text"  name="total_amount" value="{{$posts->total_amount}}" readonly>
-    </div>
+     <div class="form-group col-1 my-4" id="total">
+      <label class="label">小計</label>
+      <input class="form-control text-right" type="text" name="subtotal" value="{{ number_format($posts->subtotal, 0, ',', ',') }}" readonly>
+   </div>
+   
+   <div class="form-group col-1 my-4">
+      <label class="label">消費税</label>
+      <input class="form-control text-right" type="text" name="tax_amount" value="{{ number_format($posts->tax_amount, 0, ',', ',') }}" readonly>
+   </div>
+   
+   <div class="form-group col-1 my-4">
+      <label class="label font-weight-bold">発注金額合計</label>
+      <input class="form-control text-right" type="text" name="total_amount" value="{{ number_format($posts->total_amount, 0, ',', ',') }}" readonly>
+   </div>
      {{-- 金額合計関係（ここまで） --}}
 
     
@@ -281,16 +280,16 @@
      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
    </div>
    <div class="modal-body">
+    <form  method="post" action="{{route('post.remand_order',['id'=>$posts->id])}}">
+      @csrf
     <p><strong>申請を差戻します。</strong>よろしいですか？</p>
     {{-- 備考（差戻理由） --}}
    <div class="form-group col-6 mb-2">
      <label class="label">差戻理由</label>
-     <textarea class="form-control" name="reason_for_remand" value=""></textarea>
+     <textarea class="form-control" name="reason_for_remand" value="" required></textarea>
    </div>
    </div>
    <div class="modal-footer">
-    <form  method="post" action="{{route('post.remand_order',['id'=>$posts->id])}}">
-      @csrf
      <button type="submit" class="btn btn-danger">差戻</button>
      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
     </form>
@@ -302,6 +301,13 @@
   {{-- <script src="{{ asset('/js/applicant.js') }}"></script> --}}
   <script type="module" src="{{ asset('/js/destination.js') }}"></script>
 </div>
+
+<div class="container mt-5">
+  <footer>        
+     <p>&copy; WEB申請アプリ All rights reserved.</p>
+  </footer>
+ </div>
+ 
 </body>
 </html>
 @endsection

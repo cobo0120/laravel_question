@@ -9,12 +9,24 @@
    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('/css/index.css')  }}" >
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
     <title>申請アプリメニュー選択画面</title>
 </head>
 
 <body>
-    
 <div class="container">
+{{-- フラッシュメッセージ --}}
+<script>
+  @if (session('flash_message'))
+      $(function () {
+              toastr.success('{{ session('flash_message') }}');
+      });
+  @endif
+</script>
+
     <h3>WEB申請メニュー選択</h3>
         <div class="row justify-content-around mt-5">
 
@@ -62,13 +74,7 @@
     </div>
 </div>
 
-        {{-- <a href="{{ route('posts.create_applicant') }}" class="mx-auto  mb-5"><button type="button" class="btn btn-primary btn-lg mt-5">WEB申請</button></a>
-    
-        <a href="{{ route('posts.index_history') }}" class="mx-auto  mb-5"><button type="button" class="btn btn-primary btn-lg mt-5">申請履歴</button></a>
-    
-        <a href="{{ route('posts.profile') }}" class="mx-auto  mb-5"><button type="button" class="btn btn-primary btn-lg mt-5">プロフィール閲覧</button></a> --}}
-   
-
+        
 
 
 <div class="container mt-5">
@@ -76,6 +82,8 @@
     <p>&copy; WEB申請アプリ All rights reserved.</p>
  </footer>
 </div>
+
+<script src="{{ asset('/js/main.js') }}"></script>
 </body>
 
 

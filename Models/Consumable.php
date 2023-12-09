@@ -14,4 +14,9 @@ class Consumable extends Model
     {
         return $this->hasMany(Post::class);
     }
+
+    public function item()
+    {
+        return $this->hasOne(Item::class);
+    }
 }
